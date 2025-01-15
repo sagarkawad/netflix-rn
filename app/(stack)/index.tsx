@@ -1,45 +1,69 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Text, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlatGrid } from 'react-native-super-grid';
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useRecoilValueLoadable } from "recoil";
 import { useRouter } from 'expo-router';
-import { Movie } from "@/types/types";
-
+import { moviesDBSelectorQuery } from "@/recoil/atoms";
 
 export default function HomeScreen() {
-  // Specify the type for the moviesDB state
-  const [moviesDB, setMoviesDB] = useState<Movie[]>([]);
-  const router = useRouter();
-
-  useEffect(() => {
-    async function getMovies() {
-      const response = await axios.get("https://api.tvmaze.com/search/shows?q=all");
-      setMoviesDB(response.data.map((item: any) => item.show)); // Adjusting to get the show data
-    }
-
-    getMovies();
-  }, []);
-
-
   return (
-    <SafeAreaView>
-      <Text>Movies</Text>
-      <FlatGrid
-        itemDimension={100}
-        data={moviesDB}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => {router.push(`/(details)/${item.id}`)}} style={styles.movieDisplay}>
-            <Text>{item.name}</Text>
-            <Text>{item.network ? item.network.name : ''}</Text>
-          </TouchableOpacity>
-        )}
-      />
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.header}>Movies</Text>
+      <MovieList />
     </SafeAreaView>
   );
 }
 
+function MovieList() {
+  const moviesDB = useRecoilValueLoadable(moviesDBSelectorQuery);
+  const router = useRouter();
+
+  switch (moviesDB.state) {
+    case 'hasValue':
+      return (
+        <FlatGrid
+          itemDimension={100}
+          data={moviesDB.contents} // Use contents, not moviesDB directly
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => {
+                router.push(`/(details)/${item.id}`);
+              }}
+              style={styles.movieDisplay}
+            >
+              <Text style={styles.movieTitle}>{item.name}</Text>
+              <Text>{item.network ? item.network.name : 'No Network Info'}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      );
+    case 'loading':
+      return (
+        <View style={styles.loadingContainer}>
+          <Text>Loading...</Text>
+        </View>
+      );
+    case 'hasError':
+      return (
+        <View style={styles.errorContainer}>
+          <Text>Error fetching movies.</Text>
+        </View>
+      );
+    default:
+      return null;
+  }
+}
+
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 10,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
   movieDisplay: {
     height: 180,
     backgroundColor: 'white',
@@ -47,5 +71,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 5,
     padding: 5,
-  }
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  movieTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });

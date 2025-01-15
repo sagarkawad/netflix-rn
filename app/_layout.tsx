@@ -1,4 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import App from '@/recoilrootprovider/App';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -26,14 +27,17 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
-
   return (
+   
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(stack)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+      <App>
+    <Stack>
+      <Stack.Screen name="(stack)" options={{ headerShown: false }} />
+      <Stack.Screen name="+not-found" />
+    </Stack>
+    </App>
+    <StatusBar style="auto" />
+  </ThemeProvider>
+  
+  )
 }
