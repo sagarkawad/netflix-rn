@@ -1,4 +1,4 @@
-import { selector, atom } from "recoil";
+import { selector, selectorFamily } from "recoil";
 import axios from "axios";
 import { Movie } from "@/types/types";
 
@@ -13,6 +13,8 @@ export const moviesDBSelectorQuery = selector<Movie[]>({
     } 
 }
 });
+
+
 
 
 // export const moviesDBSelectorQuery = atom<Movie[]>({
